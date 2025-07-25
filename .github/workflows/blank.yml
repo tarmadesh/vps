@@ -1,31 +1,48 @@
-# .github/workflows/free-linux-shell.yml
-name: Free Linux shell via GitHub Actions
+name: Free Linux Shell via GitHub Actions
 
-# Trigger manually or on every push to main
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # Manual trigger
   push:
     branches: [ "main" ]
 
 jobs:
-  shell:
-    runs-on: ubuntu-latest       # GitHub-hosted Linux runner
+  linux-shell:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # 6 hours max
+    
     steps:
-      # 1. Check out your repo
-      - uses: actions/checkout@v4
-
-      # 2. Run arbitrary Bash commands
-      - name: Install htop and print system info
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: System info and basic setup
         run: |
-          sudo apt-get update
-          sudo apt-get install -y htop
+          echo "=== System Information ==="
           uname -a
           lsb_release -a
-          htop -b -n1 | head
-
-      # 3. (Optional) Pause so you can SSH in for debugging
-      #    Uses the open-source 'upterm' action ➜ opens a live SSH/Tmux session
-      - name: Debug with live SSH shell
-        uses: lhotari/action-upterm@v1          # marketplace action[10]
+          df -h
+          free -h
+          nproc
+          
+          echo "=== Installing useful tools ==="
+          sudo apt-get update
+          sudo apt-get install -y htop neofetch tmux vim git curl wget
+          
+      - name: Create workspace directory
+        run: |
+          mkdir -p ~/workspace
+          cd ~/workspace
+          echo "Working directory: $(pwd)"
+          
+      - name: Your custom commands here
+        run: |
+          # Add your commands here
+          echo "Ready for work!"
+          neofetch
+          
+      # Debug shell - requires SSH key on your GitHub profile
+      - name: Setup interactive SSH session
+        uses: lhotari/action-upterm@v1
         with:
-          limit-access-to-actor: true           # only repo author can connect
+          limit-access-to-actor: true
+          wait-timeout-minutes: 30
+        if: ${{ github.event_name == 'workflow_dispatch' }}
