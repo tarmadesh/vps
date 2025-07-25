@@ -1,0 +1,31 @@
+# .github/workflows/free-linux-shell.yml
+name: Free Linux shell via GitHub Actions
+
+# Trigger manually or on every push to main
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  shell:
+    runs-on: ubuntu-latest       # GitHub-hosted Linux runner
+    steps:
+      # 1. Check out your repo
+      - uses: actions/checkout@v4
+
+      # 2. Run arbitrary Bash commands
+      - name: Install htop and print system info
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y htop
+          uname -a
+          lsb_release -a
+          htop -b -n1 | head
+
+      # 3. (Optional) Pause so you can SSH in for debugging
+      #    Uses the open-source 'upterm' action ➜ opens a live SSH/Tmux session
+      - name: Debug with live SSH shell
+        uses: lhotari/action-upterm@v1          # marketplace action[10]
+        with:
+          limit-access-to-actor: true           # only repo author can connect
